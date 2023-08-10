@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Page Title</title>
+
+    <script src="https://www.marvinj.org/releases/marvinj-0.9.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+
+    <style>
+        canvas {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>Simple Image</h3>
+    <img src="cpt_2.png" alt="cpt_3" id="o" width="250" height="110" />
+
+    <hr>
+
+    <h2>Result(Marvin):</h2>
+    <canvas id="canvas"></canvas>
+    <canvas id="canvas_gr"></canvas>
+    <hr>
+    <h3>Generated Cropped Images:</h3>
+    <div id="genCropImgs"></div>
+    <hr />
+    <h3>Tesseract:</h3>
+    <p id="r"></p>
+    <hr>
+    <h3>From canvas to canvas</h3>
+    <canvas id="ccanvas"></canvas>
+    <script>
+
+        var original = document.getElementById('o');//<img>
+        var specImg = original.src;
+        var canvas = document.getElementById("canvas");
+        var canvas_x = canvas.getContext("2d");
+
+        var canvas_gr = document.getElementById("canvas_gr");
+
+        image = new MarvinImage();
+        image.load(original.src, imageLoaded);
+
+        function imageLoaded() {
+
+            // var grayedImage = new MarvinImage(image.getWidth(), image.getHeight());
+
+            //  grayscale(image, grayedImage);
+            // thresholding(image, grayedImage, 111);
+
+            // grayedImage.draw(canvas_gr);
+
+            //image = grayedImage;
+
+            var width = image.getWidth();
+            var factor = width / 150;
+            var original = image.clone();
+            Marvin.scale(image.clone(), image, 150);
+            var bin = MarvinColorModelConverter.rgbToBinary(image, 150);
+            Marvin.morphologicalClosing(bin.clone(), bin, MarvinMath.getTrueMatrix(6, 6));
+            image = MarvinColorModelConverter.binaryToRgb(bin);
+            var segments = Marvin.floodfillSegmentation(image);
+
+            var genItemsDiv = document.getElementById("genCropImgs");
+            var poss = new Array();
+
+            for (let i = 0; i < segments.length; i++) {
+                var seg = segments[i];
+
+                if (seg.height >= 15) {
+                    var pos = {
+                        x: Math.floor(seg.x1 * factor),//x
+                        y: Math.floor(seg.y1 * factor) - 1,//y
+                        w: Math.floor(seg.width * factor) + 5,//widht
+                        h: Math.floor(seg.height * factor) + 5,//height
+                    };
+
+                    original.drawRect(
+                        pos.x,//x
+                        pos.y,//y
+                        pos.w,//widht
+                        pos.h,//height
+                        0xFFFFFFF8000);
+
+                    poss.push(pos);
+                }
+
+            }
+
+            original.draw(canvas);
+            //console.log("Positions: " + poss);
+
+            //************************************************************************************************
+
+
+            var imgos = new Array();//imgos=>image positions where the croppings are
+            for (let i = 0; i < poss.length; i++) {
+                var proportion = .9;
+                var cw = canvas.width;
+                var ch = canvas.height;
+                var cx = cw / 2;
+                var cy = ch / 2;
+
+                var sx = poss[i].x;//purple-red X
+                var sy = poss[i].y;//blue-orange y
+                var sw = poss[i].w;//red x
+                var sh = poss[i].h;//orange y
+                var r = 1;
+                var o = { // cropping bars
+                    "sx": {
+                        color: "blue",
+                        x: 0,
+                        y: sy,
+                        w: cw,
+                        h: r,
+                        bool: false,
+                    },
+                    "sy": {
+                        color: "purple",
+                        x: sx,
+                        y: 0,
+                        w: r,
+                        h: ch,
+                        bool: false,
+                    },
+                    "sw": {
+                        color: "orange",
+                        x: 0,
+                        y: sy + sh,
+                        w: cw,
+                        h: r,
+                        bool: false,
+                    },
+                    "sh": {
+                        color: "red",
+                        x: sx + sw,
+                        y: 0,
+                        w: r,
+                        h: ch,
+                        bool: false,
+                    }
+                }
+
+                var d = {
+                    x: ~~(cx - sw * proportion / 2),
+                    y: ~~(cy - sh * proportion / 2)
+                }
+
+                var imgo = Imgo(o, d);
+                imgos.push(imgo);
+
+                //drawGuides(o);//draws line where the cropping parts are.
+
+            }
+
+            var img = new Image();
+            img.src = specImg;//canvas_gr.toDataURL();//
+            img.onload = function () {
+                drawCroppedImage();
+
+                // for (let i = 0; i < imgos.length; i++) {
+                //     var d = document.getElementById("gCanv" + (i))
+
+
+
+                // }
+                var d = document.getElementById("gCanv" + (4))
+
+
+                var ccanvas = document.getElementById("ccanvas"),
+                    ccanvas_x = ccanvas.getContext("2d");
+
+                ccanvas_x.drawImage(d, -160, -100, 600, 300);
+
+
+                //console.log(d.toDataURL())
+
+
+
+                // Tesseract.recognize(
+                //     d.toDataURL(),
+                //     'eng',
+
+                //     {}
+                // ).then(({ data: { text } }) => {
+                //     document.getElementById("r").innerHTML = text;
+                //     console.log(text);
+                // })
+
+
+
+
+
+            }
+
+            //console.log(imgos);
+
+            function drawCroppedImage() {
+                for (let i = 0; i < imgos.length; i++) {
+                    var imgo = imgos[i];
+                    let gencanv = document.createElement("canvas");
+                    gencanv.id = "gCanv" + (i);
+                    var gencanv_x = gencanv.getContext("2d");
+                    //gencanv_x.drawImage(img, imgo.sx, imgo.sy, imgo.sw, imgo.sh, imgo.x, imgo.y, imgo.w, imgo.h);
+                    gencanv_x.drawImage(img, imgo.sx, imgo.sy, imgo.sw, imgo.sh, imgo.x, imgo.y, imgo.w, imgo.h);
+                    genItemsDiv.appendChild(gencanv);
+
+                }
+            }
+
+            function Imgo(o, d) { // an object defining the cropped image part positions
+                var imgo = {
+                    sx: o.sy.x,
+                    sy: o.sx.y,
+                    sw: o.sh.x - o.sy.x,
+                    sh: o.sw.y - o.sx.y,
+                    w: ~~((o.sh.x - o.sy.x) * proportion),
+                    h: ~~((o.sw.y - o.sx.y) * proportion),
+                    x: d.x,
+                    y: d.y
+                }
+                return imgo;
+            }
+
+            function drawGuides(o) {
+                for (k in o) {
+                    canvas_x.fillStyle = o[k].color;
+                    canvas_x.beginPath();
+                    canvas_x.fillRect(o[k].x, o[k].y, o[k].w, o[k].h);
+                }
+            }
+
+            function grayscale(imageIn, imageOut) {
+                for (var y = 0; y < imageIn.getHeight(); y++) {
+                    for (var x = 0; x < imageIn.getWidth(); x++) {
+                        var red = imageIn.getIntComponent0(x, y);
+                        var green = imageIn.getIntComponent1(x, y);
+                        var blue = imageIn.getIntComponent2(x, y);
+                        var gray = Math.floor(red * 0.21 + green * 0.71 + blue * 0.08);
+
+                        imageOut.setIntColor(x, y, gray, gray, gray);
+                    }
+                }
+            }
+
+            function thresholding(imageIn, imageOut, threshold) {
+                // Convert image to gray scale before thresholding
+                grayscale(imageIn, imageOut);
+                for (var y = 0; y < imageOut.getHeight(); y++) {
+                    for (var x = 0; x < imageOut.getWidth(); x++) {
+                        var gray = imageOut.getIntComponent0(x, y);
+
+                        if (gray < threshold) {
+                            imageOut.setIntColor(x, y, 0xFF000000);
+                        } else {
+                            imageOut.setIntColor(x, y, 0xFFFFFFFF);
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>

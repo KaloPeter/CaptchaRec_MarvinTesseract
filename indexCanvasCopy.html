@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Page Title</title>
+
+    <style>
+        canvas {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <canvas id="source"></canvas>
+        <canvas id="goal"></canvas>
+    </div>
+    <script>
+        var source = document.getElementById("source");
+        var sourceContext = source.getContext('2d');
+
+        var goal = document.getElementById("goal");
+        var goalContext = goal.getContext("2d");
+        goal.width = source.width;
+        goal.height = source.height;
+
+        image = new Image();
+        image.src = "cpt.png";
+        image.onload = function () {
+            sourceContext.drawImage(image, 0, 0);
+            console.log("original loaded and drawed")
+            goalContext.drawImage(source, 0, 0);
+        }
+
+        //******************************************************
+
+
+
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>

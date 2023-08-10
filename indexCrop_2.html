@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Page Title</title>
+</head>
+
+
+<body>
+
+    <div class="wrapper">
+        <canvas id='c1'></canvas>
+        <canvas id='c2'></canvas>
+    </div>
+
+    <script>
+        var proportion = .9; //proportien or size 
+        var theImage = "cpt.png";
+
+        var c1 = document.getElementById("c1");
+        var ctx1 = c1.getContext("2d");
+
+        var c2 = document.getElementById("c2");
+        var ctx2 = c2.getContext("2d");
+
+        var cw = c1.width = c2.width = 200,
+            cx = cw / 2;
+
+        var ch = c1.height = c2.height = 200,
+            cy = ch / 2;
+
+        var sx = 0;//purple-red X
+        var sy = 0;//blue-orange y
+
+        var sw = 120;//red x
+        var sh = 50;//orange y
+
+        var r = 5;//thickness of lines/boundaries
+
+        var o = { // cropping bars
+            "sx": {
+                color: "blue",
+                x: 0,
+                y: sy,
+                w: cw,
+                h: r,
+                bool: false,
+            },
+            "sy": {
+                color: "purple",
+                x: sx,
+                y: 0,
+                w: r,
+                h: ch,
+                bool: false,
+            },
+            "sw": {
+                color: "orange",
+                x: 0,
+                y: sy + sh,
+                w: cw,
+                h: r,
+                bool: false,
+            },
+            "sh": {
+                color: "red",
+                x: sx + sw,
+                y: 0,
+                w: r,
+                h: ch,
+                bool: false,
+            }
+        }
+
+        var d = {
+            x: ~~(cx - sw * proportion / 2),
+            y: ~~(cy - sh * proportion / 2)
+        }
+
+        drawGuides(o);//draws colorful lines to see what is cropped
+
+        var imgo = Imgo(o, d); // an object defining the cropped image
+        var img = new Image();
+
+        img.src = theImage;
+
+        img.onload = function () {
+            c1.style.backgroundRepeat = "no-repeat";
+            c1.style.backgroundImage = "url(" + theImage + ")";
+            drawCroppedImage(imgo);
+        }
+
+        //drawing the colorful lines/boundaries
+        function drawGuides(o) {
+            for (k in o) {
+                ctx1.fillStyle = o[k].color;
+                ctx1.beginPath();
+                ctx1.fillRect(o[k].x, o[k].y, o[k].w, o[k].h);
+            }
+        }
+
+        function Imgo(o, d) { // an object defining the cropped image
+            var imgo = {
+                sx: o.sy.x,
+                sy: o.sx.y,
+                sw: o.sh.x - o.sy.x,
+                sh: o.sw.y - o.sx.y,
+                w: ~~((o.sh.x - o.sy.x) * proportion),
+                h: ~~((o.sw.y - o.sx.y) * proportion),
+                x: d.x,
+                y: d.y
+            }
+            return imgo;
+        }
+
+        function drawCroppedImage(imgo) {
+            ctx2.drawImage(img, imgo.sx, imgo.sy, imgo.sw, imgo.sh, imgo.x, imgo.y, imgo.w, imgo.h);
+        }
+
+    </script>
+
+</body>
+
+</html>

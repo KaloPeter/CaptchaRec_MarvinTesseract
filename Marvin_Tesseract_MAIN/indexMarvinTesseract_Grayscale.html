@@ -16,7 +16,7 @@
 
 <body>
     <h3>Simple Image</h3>
-    <img src="cpt_2.png" alt="cpt_3" id="o" width="250" height="110" />
+    <img src="../Images/cpt.png" alt="cpt_3" id="o" width="250" height="110" />
 
     <hr>
 
@@ -29,9 +29,6 @@
     <hr />
     <h3>Tesseract:</h3>
     <p id="r"></p>
-    <hr>
-    <h3>From canvas to canvas</h3>
-    <canvas id="ccanvas"></canvas>
     <script>
 
         var original = document.getElementById('o');//<img>
@@ -46,12 +43,12 @@
 
         function imageLoaded() {
 
-            // var grayedImage = new MarvinImage(image.getWidth(), image.getHeight());
+            var grayedImage = new MarvinImage(image.getWidth(), image.getHeight());
 
-            //  grayscale(image, grayedImage);
-            // thresholding(image, grayedImage, 111);
+            grayscale(image, grayedImage);
+            thresholding(image, grayedImage, 111);
 
-            // grayedImage.draw(canvas_gr);
+            grayedImage.draw(canvas_gr);
 
             //image = grayedImage;
 
@@ -157,7 +154,7 @@
             }
 
             var img = new Image();
-            img.src = specImg;//canvas_gr.toDataURL();//
+            img.src = canvas_gr.toDataURL();//specImg;
             img.onload = function () {
                 drawCroppedImage();
 
@@ -167,28 +164,21 @@
 
 
                 // }
-                var d = document.getElementById("gCanv" + (4))
 
-
-                var ccanvas = document.getElementById("ccanvas"),
-                    ccanvas_x = ccanvas.getContext("2d");
-
-                ccanvas_x.drawImage(d, -160, -100, 600, 300);
-
-
-                //console.log(d.toDataURL())
+                var d = document.getElementById("gCanv" + (2))
+                console.log(d.toDataURL())
 
 
 
-                // Tesseract.recognize(
-                //     d.toDataURL(),
-                //     'eng',
+                Tesseract.recognize(
+                    d.toDataURL(),
+                    'eng',
 
-                //     {}
-                // ).then(({ data: { text } }) => {
-                //     document.getElementById("r").innerHTML = text;
-                //     console.log(text);
-                // })
+                    {}
+                ).then(({ data: { text } }) => {
+                    document.getElementById("r").innerHTML = text;
+                    console.log(text);
+                })
 
 
 
@@ -204,7 +194,6 @@
                     let gencanv = document.createElement("canvas");
                     gencanv.id = "gCanv" + (i);
                     var gencanv_x = gencanv.getContext("2d");
-                    //gencanv_x.drawImage(img, imgo.sx, imgo.sy, imgo.sw, imgo.sh, imgo.x, imgo.y, imgo.w, imgo.h);
                     gencanv_x.drawImage(img, imgo.sx, imgo.sy, imgo.sw, imgo.sh, imgo.x, imgo.y, imgo.w, imgo.h);
                     genItemsDiv.appendChild(gencanv);
 

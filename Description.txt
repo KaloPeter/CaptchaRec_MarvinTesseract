@@ -1,5 +1,6 @@
 This side/hobby project is about to try successfully pass the captcha test.
 I am using the MarvinJ framework and Tesseract.js library to process the given image, and recognize it's content.
+For efficient run, you need a local webserver such as Live Server for VS Code.
 The project is in progress.
 
 Sources: 
